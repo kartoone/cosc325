@@ -3,19 +3,26 @@ import java.awt.Graphics;
 import java.util.ArrayList;
 import javax.swing.JPanel;
 
-import shapes.Rectangle; 
-import shapes.Shape;
+import shapes.*; 
 
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 
-public class PaintPanel extends JPanel implements MouseListener {
+public class PaintPanel extends JPanel implements MouseListener, MouseMotionListener {
     
+    protected enum ShapeType {
+        RECTANGLE, SQUARE, TRIANGLE, OVAL, CIRCLE
+    }
+
     protected ArrayList<Shape> shapes = new ArrayList<>();
+    protected ShapeType currentShape = ShapeType.RECTANGLE;
+    protected String currentColor = "#ff0000";
 
     public PaintPanel() {
         super();
         addMouseListener(this);
+        addMouseMotionListener(this);
     }
 
     @Override
@@ -54,6 +61,10 @@ public class PaintPanel extends JPanel implements MouseListener {
         // hide the top part of the mouth to make it look like a smile
         g.setColor(Color.WHITE);
         g.fillRect(centerx-mouth/2, h-thirdy-20, mouth, 40);
+
+        for (Shape s : shapes) {
+            s.draw(g);
+        }
     }
 
     @Override
@@ -65,13 +76,23 @@ public class PaintPanel extends JPanel implements MouseListener {
         int topleftx = mousex - 40/2;
         int toplefty = mousey - 10/2;
         System.out.println(mousex + " " + mousey);
-        Rectangle r = new Rectangle(topleftx, toplefty, 40, 10, "#ff0000");
-        r.draw(getGraphics());
+        Shape s;
+        if (currentShape == ShapeType.RECTANGLE) {
+            s = new Rectangle(topleftx, toplefty, 40, 10, "#ff0000");
+        } else if (currentShape == ShapeType.SQUARE) {
+            s = new Square(topleftx, toplefty, 40, "#ff0000");
+        } else {
+            // draw a rectangle by default
+            s = new Rectangle(topleftx, toplefty, 40, 10, "#ff0000");
+        }
+        shapes.add(s);
+        s.draw(getGraphics());
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
         // handled in mouseClicked
+        System.out.println("released");
     }
 
     @Override
@@ -87,6 +108,15 @@ public class PaintPanel extends JPanel implements MouseListener {
     @Override
     public void mouseExited(MouseEvent e) {
         // ignored
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        mouseClicked(e);
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
     }  
 
 }

@@ -15,8 +15,9 @@ import javax.swing.event.MenuKeyEvent;
 import java.awt.event.ActionEvent;
 
 public class ShapeSwingProgram extends JFrame implements ActionListener {
-
-    private PaintPanel paintPanel = new PaintPanel();
+    
+    
+    protected PaintPanel paintPanel = new PaintPanel();
 
     public ShapeSwingProgram(String title) {
         super(title);
@@ -82,26 +83,27 @@ public class ShapeSwingProgram extends JFrame implements ActionListener {
 
         // create a group so you can only select one color at a time
         ButtonGroup group = new ButtonGroup();
-        menuItem = new JMenuItem("Red", MenuKeyEvent.VK_R);
-        menuItem.addActionListener(this);
-        group.add(menuItem);
-        submenu.add(menuItem);
-        menuItem = new JMenuItem("Yellow", MenuKeyEvent.VK_Y);
-        menuItem.addActionListener(this);
-        group.add(menuItem);
-        submenu.add(menuItem);
-        menuItem = new JMenuItem("Green", MenuKeyEvent.VK_G);
-        menuItem.addActionListener(this);
-        group.add(menuItem);
-        submenu.add(menuItem);
-        menuItem = new JMenuItem("Black", MenuKeyEvent.VK_B);
-        menuItem.addActionListener(this);
-        group.add(menuItem);
-        submenu.add(menuItem);
-        menuItem = new JMenuItem("White", MenuKeyEvent.VK_W);
-        menuItem.addActionListener(this);
-        group.add(menuItem);
-        submenu.add(menuItem);
+        rbMenuItem = new JRadioButtonMenuItem("Red");
+        rbMenuItem.addActionListener(this);
+        rbMenuItem.setSelected(true);
+        group.add(rbMenuItem);
+        submenu.add(rbMenuItem);
+        rbMenuItem = new JRadioButtonMenuItem("Yellow");
+        rbMenuItem.addActionListener(this);
+        group.add(rbMenuItem);
+        submenu.add(rbMenuItem);
+        rbMenuItem = new JRadioButtonMenuItem("Green");
+        rbMenuItem.addActionListener(this);
+        group.add(rbMenuItem);
+        submenu.add(rbMenuItem);
+        rbMenuItem = new JRadioButtonMenuItem("Black");
+        rbMenuItem.addActionListener(this);
+        group.add(rbMenuItem);
+        submenu.add(rbMenuItem);
+        rbMenuItem = new JRadioButtonMenuItem("White");
+        rbMenuItem.addActionListener(this);
+        group.add(rbMenuItem);
+        submenu.add(rbMenuItem);
 
         // Turn submenu into an actual submenu by adding it to another menu (specifically, our second menu)
         menu.add(submenu);
@@ -121,9 +123,9 @@ public class ShapeSwingProgram extends JFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        // TODO Auto-generated method stub
-//        paintPanel.invalidate();
-//        paintPanel.repaint();
-        System.out.println(e.getActionCommand());
+        if (e.getActionCommand()=="Rectangle")
+            paintPanel.currentShape = PaintPanel.ShapeType.RECTANGLE;
+        else if (e.getActionCommand()=="Square")
+            paintPanel.currentShape = PaintPanel.ShapeType.SQUARE;
     }
 }

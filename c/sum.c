@@ -1,3 +1,12 @@
+/*
+  From VS Code terminal:
+    git fetch upstream
+    git pull upstream/main
+    
+  If you get any errors you may also need to do:
+    git merge upstream/main
+*/
+
 #include <stdio.h>
 
 int sum(int n) {

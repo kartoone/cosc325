@@ -15,6 +15,7 @@ public class Sum {
         Scanner in = new Scanner(System.in);
         int n = Integer.parseInt(in.nextLine());
         System.out.printf("%d\n", sum(n));    
+        in.close();
     }
 
 }

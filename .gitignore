@@ -1,0 +1,5 @@
+.vscode/tasks.json
+c/lab1/main
+c/lab1/main.dSYM/Contents/Info.plist
+c/lab1/main.dSYM/Contents/Resources/DWARF/main
+c/lab1/main.dSYM/Contents/Resources/Relocations/aarch64/main.yml

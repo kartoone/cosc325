@@ -71,6 +71,7 @@ void statement() {
         
         case GOSUB:
             lex();
+            expression();
 
             // extra call to lex to look for the carriage return
             lex();
@@ -81,7 +82,7 @@ void statement() {
         case LIST:
         case RUN:
         case END:
-            lex();
+            lex(); // this IS the extra call to lex() since nothing comes after these keywords
 
             break;
     }

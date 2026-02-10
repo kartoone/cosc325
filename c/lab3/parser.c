@@ -159,20 +159,23 @@ void expression() {
         lex(); // move past the leading + or - if it was there otherwise, the current nextToken is part of the term so no need to call lex()
     }
     term();
+    // no need to call lex() here because term() will have already called lex() for us when it was looking for * or /
     while (nextToken == ADD_OP || nextToken == SUB_OP) {
         lex(); // move past the + or -
         term();
-        lex(); // see if we have another + or - coming up   
+        // remember, term() will have already called lex() for us when it was looking for * or / so no need to call it again here
     }
     // no need for extra call to lex() here because the while loop will have already called lex() for us when it was looking for + or -
 }
 
 void term() {
     // you gotta do something here ... should be very similar to expression() but looking for * and / instead of + and -
+    // note that term() will end up having an extra call to lex() at the end just like expression() does
 }
 
 void factor() {
     // look back at the grammar for all the possibilities for a factor ... you need if else if to handle identifiers, numbers, and parenthesized expressions
+    // you should make very sure NOT to have an extra call to lex() here (finally!) because expression() and term() are the ones that need the extra calls to lex() to look for +, -, *, or /
 }
 
 void relop() {

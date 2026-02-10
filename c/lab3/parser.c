@@ -126,18 +126,21 @@ void statement() {
 // lex has ALREADY been called before expr_list
 void expr_list() {
     if (nextToken == STRING) {
-        // do nothing for this assignment
+        // extra call to lex() to look for the comma or carriage return after the string
+        lex();
+        // do nothing else for this assignment
         // but in the next assignment you will need to print something!
     } else {
         expression();
+        // expression ends with an extra call to lex() so we are already looking for the comma or carriage return by the time we get back here
     }
-    lex(); // extra call to look for the comma
     while (nextToken == COMMA) {
+        lex(); // move past the comma (i.e., consume the comma by looking for the next token after the comma)
         // next assignment: printf("\t");
         if (nextToken == STRING) {
             // extra call to lex() to look for the comma or carriage return after the string
             lex();
-            // do nothing for this assignment
+            // do nothing else for this assignment
             // but in the next assignment you will need to print something
         } else {
             expression();
@@ -152,10 +155,12 @@ void expr_list() {
 }
 
 void expression() {
+    if(nextToken == ADD_OP || nextToken == SUB_OP) {
+        lex(); // move past the leading + or - if it was there otherwise, the current nextToken is part of the term so no need to call lex()
+    }
     term();
-    lex(); // see if we have a + or - coming up
     while (nextToken == ADD_OP || nextToken == SUB_OP) {
-        lex();
+        lex(); // move past the + or -
         term();
         lex(); // see if we have another + or - coming up   
     }

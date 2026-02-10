@@ -9,6 +9,8 @@ void line();
 void statement();
 void expr_list();
 void expression();
+void term();
+void factor();
 void relop();
 
 /******************************************************/
@@ -56,6 +58,7 @@ void statement() {
             expr_list();
             // unconditionally printf("\n");
             break;
+
         case IF:
             lex();
             expression(); 
@@ -72,11 +75,11 @@ void statement() {
             // we never need an extra call to lex() here 
             // because statement() ALWAYS has an extra call to lex()
             break;
+
         case GOTO:
             lex();
-
-            // extra call to lex to look for the carriage return
-            lex();
+            expression();
+            // no extra call to lex to look for the carriage return
             break;
 
         // keep going with more cases INPUT DOES NOT NEED THE EXTRA CALL TO LEX ... NEITHER DO THE ONES THAT ARE JUST KEYWORDS
@@ -87,27 +90,35 @@ void statement() {
 
         case LET:
             lex();
-
-            // extra call to lex to look for the carriage return
+            if (nextToken != IDENT) {
+                printf("Expecting IDENT but found: %d\n", nextToken);
+                exit(1);
+            }
             lex();
+            if (nextToken != EQUALS_OP) {
+                printf("Expecting EQ but found: %d\n", nextToken);
+                exit(1);
+            }
+            lex();
+            expression();
+
+            // no extra call to lex() here because expression() will have already called lex() for us when it was looking for +, -, *, or /
             break;
         
         case GOSUB:
             lex();
             expression();
 
-            // extra call to lex to look for the carriage return
-            lex();
+            // NO extra call to lex to look for the carriage return b/c expression() has an extra call to lex()
             break;
             
-        // case RETURN:
-        // case CLEAR:
-        // case LIST:
-        // case RUN:
-        // case END:
-        //     lex(); // this IS the extra call to lex() since nothing comes after these keywords
-        //     you probably need another call to lex() right here!!!!
-        //     break;
+        case RETURN:
+        case CLEAR:
+        case LIST:
+        case RUN:
+        case END:
+             lex(); // this IS the extra call to lex() since nothing comes after these keywords
+             break;
     }
 }
 
@@ -124,12 +135,14 @@ void expr_list() {
     while (nextToken == COMMA) {
         // next assignment: printf("\t");
         if (nextToken == STRING) {
+            // extra call to lex() to look for the comma or carriage return after the string
+            lex();
             // do nothing for this assignment
             // but in the next assignment you will need to print something
         } else {
             expression();
+            // no extra call to lex() here because expression() will have already called lex() for us when it was looking for +, -, *, or /
         }
-        lex(); // extra call to look for the comma
         // there are only two valid tokens AT THIS SPOT
         if (nextToken != COMMA && nextToken != CR) {
             printf("Expecting COMMA or CR but found: %d\n", nextToken);
@@ -139,7 +152,22 @@ void expr_list() {
 }
 
 void expression() {
-    lex(); // you gotta do more than this!
+    term();
+    lex(); // see if we have a + or - coming up
+    while (nextToken == ADD_OP || nextToken == SUB_OP) {
+        lex();
+        term();
+        lex(); // see if we have another + or - coming up   
+    }
+    // no need for extra call to lex() here because the while loop will have already called lex() for us when it was looking for + or -
+}
+
+void term() {
+    // you gotta do something here ... should be very similar to expression() but looking for * and / instead of + and -
+}
+
+void factor() {
+    // look back at the grammar for all the possibilities for a factor ... you need if else if to handle identifiers, numbers, and parenthesized expressions
 }
 
 void relop() {

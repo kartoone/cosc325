@@ -48,6 +48,11 @@ int lex();
 #define INPUT 35
 #define LET 36
 #define COMMA 40
+#define RETURN 41
+#define END 42
+#define LIST 43
+#define CLEAR 44
+#define RUN 45
 #define CR 99
 
 
@@ -177,8 +182,18 @@ int keywordLookup() {
     return INPUT;
   else if (strcmp(lexeme,"GOSUB")==0)
     return GOSUB;
+  else if (strcmp(lexeme,"GOTO")==0)
+    return GOTO;
   else if (strcmp(lexeme,"LET")==0)
     return LET;
+  else if (strcmp(lexeme,"END")==0)
+    return END;
+  else if (strcmp(lexeme,"CLEAR")==0)
+    return CLEAR;
+  else if (strcmp(lexeme,"LIST")==0)
+    return LIST;
+  else if (strcmp(lexeme,"RUN")==0)
+    return RUN;
   //else if ... finish all the keywords!
   else
     return IDENT;

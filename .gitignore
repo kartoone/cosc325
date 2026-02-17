@@ -8,3 +8,7 @@ c/lab1/main.ilk
 c/lab1/main.obj
 c/lab1/main.pdb
 c/lab1/vc140.pdb
+*.exe
+*.ilk
+*.obj
+*.pdb

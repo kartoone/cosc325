@@ -11,3 +11,7 @@ c/lab1/vc140.pdb
 .vscode/launch.json
 c/lab3/parser
 **/parser.dSYM/**
+*.exe
+*.obj
+*.ilk
+*.pdb

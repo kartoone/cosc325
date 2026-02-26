@@ -4,7 +4,8 @@
 int lineno = 0;   // if this is equal to 0 then we should execute immediately
 char* lines[10];  // preallocate enough room for 10 lines
 int linenos[10];  
-
+int symboltable[26];
+char symboldefined[26];
 void line();
 void statement();
 void expr_list();
@@ -19,8 +20,10 @@ void relop();
 int main()
 {
   /* Open the input data file and process its contents */
-  if ((in_fp = fopen("front.in", "r")) == NULL)
+  if ((in_fp = fopen("front.in", "r")) == NULL) {
     printf("ERROR - cannot open front.in \n");
+    printf("%d",(int)('A'-'A'));
+  } 
   else
   {
     getChar();

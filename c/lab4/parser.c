@@ -14,20 +14,76 @@ char* lines[1000];   // preallocate enough room for 1000 lines if we have more l
 int linenos[1000];   // map the corresponding position in "lines" to the "line #" in this data structure
 int lineindex = 0;   // keeps track of how many lines we have and where the next line should be stored
 
+// here's our dirty symbol table
+int symboltable[26];   // position 0 = "A", position 1 = "B", etc...
+int symboldefined[26]; // store a 1 in a given position if that "symbol" has been defined 
 
 void line();
 void statement();
 void expr_list();
 void var_list();
-void expression();
-void term();
-void factor();
+int expression();
+int term();
+int factor();
 void relop();
+
+// hard coded swap of the positions applied to two different data structures
+void swap(int j, int k) {
+    // let's take care of the char* first
+    char* tmpc = lines[j];
+    lines[j] = lines[k];
+    lines[k] = tmpc;
+
+    // now let's take care of swapping the ints
+    int tmpi = linenos[j];
+    linenos[j] = linenos[k];
+    linenos[k] = tmpi;
+}
+
+// insertion sort algorithm - wikipedia
+// i ← 1
+// while i < length(A)
+//     j ← i
+//     while j > 0 and A[j-1] > A[j]
+//         swap A[j] and A[j-1]
+//         j ← j - 1
+//     end while
+//     i ← i + 1
+// end while
+void sort() {
+    int i = 1;
+    while (i < lineindex) {
+        int j = i;
+        while (j>0 && linenos[j-1]>linenos[j]) {
+            swap(j, j-1);
+            j = j - 1;
+        }
+        i = i + 1;
+    }
+}
+
+// search through linenos and return index if found
+// otherwise return -1 (if not found)
+// no need for curly braces, but be careful if you change this!
+int search(int lineno) {
+    for (int i=0; i<lineindex; i++) 
+        if (linenos[i]==lineno) 
+            return i;
+    return -1;
+}
+
 
 /******************************************************/
 /* main driver */
 int main()
 {
+    // prep the symbol table definitions
+    // to indicate that no symbols have been defined yet
+    for (int i=0; i<26; i++) {
+        symboldefined[i] = 0;
+    }
+
+
   /* Open the input data file and process its contents */
   if ((in_fp = fopen("front.in", "r")) == NULL)
     printf("ERROR - cannot open front.in \n");
@@ -46,7 +102,9 @@ int main()
 void line() {
     if (nextToken == NUMBER) {
         lineno = atoi(lexeme);
-        linenos[lineindex] = lineno;
+        int previndex = search(lineno);
+        if (previndex < 0)
+            linenos[lineindex] = lineno;
 
         // take whatever is left in the rest of the line and store it for processing later!
 
@@ -59,10 +117,17 @@ void line() {
 
         // allocate memory for the new line we just read in via lex_endl()
         // and then copy the line we just read into that new memory location
-        lines[lineindex] = malloc(1000);
-        strcpy(lines[lineindex], rest_of_line);
-        lineindex++;
-        printf("Stored this line: %s at line number %d, which is index %d\n", rest_of_line, lineno, lineindex);
+        if (previndex < 0) {
+            // this must be a new line, allocate space for it
+            lines[lineindex] = malloc(1000);
+            strcpy(lines[lineindex], rest_of_line);
+            printf("Stored this line: %s at line number %d, which is index %d\n", rest_of_line, lineno, lineindex);
+            lineindex++;
+        } else {
+            // we are overwriting an old line so just copy it over the space that was already allocated at previndex
+            strcpy(lines[previndex], rest_of_line);
+            printf("Overwrote old line with this line: %s at line number %d, which is index %d\n", rest_of_line, lineno, previndex);
+        }
     } else {
         statement(); // note that statement MUST have an extra call to lex()
     }
@@ -113,13 +178,15 @@ void statement() {
                 printf("Expecting IDENT but found: %d\n", nextToken);
                 exit(1);
             }
+            int pos = lexeme[0]-'A';
+            symboldefined[pos] = 1;
             lex();
             if (nextToken != EQUALS_OP) {
                 printf("Expecting EQ but found: %d\n", nextToken);
                 exit(1);
             }
             lex();
-            expression();
+            symboltable[pos] = expression();
 
             // no extra call to lex() here because expression() will have already called lex() for us when it was looking for +, -, *, or /
             break;
@@ -136,6 +203,7 @@ void statement() {
             lex(); // this IS the extra call to lex() since nothing comes after these keywords
             break;
         case LIST:
+            sort();
             for (int i=0; i<lineindex; i++) {
               printf("%d: %s\n", linenos[i], lines[i]);
             }
@@ -143,9 +211,26 @@ void statement() {
             break;
         case RETURN:
         case RUN:
+            sort();
+            // BIG TO DO HERE: update the lexer to take in a String
+            // instead of always reading from a file ... DO THIS BY ADDING
+            // a FLAG variable to the lexer to indicate whether it 
+            // should be grabbing the next token from a FILE or from a String
+            // also, add a function that will set a global string to be processed
+            // and simultaneously set the flag to start reading from the string
+
+            // loop through all the lines
+            // setting the read_from_str flag and the current line as the string to be read
+            // use one variable both ... a char* to the line to be prcoessed
+            // if that line is null, then the lexer should be reading from the file
+
+            // DON'T FORGET, we need to clear the flag after the program
+            // has run and set it to continue reading from the file
+            // clearing the flag might necessitate messing with those global
+            // variables (nextChar, charClass, etc...)
         case END:
-             lex(); // this IS the extra call to lex() since nothing comes after these keywords
-             break;
+            lex(); // this IS the extra call to lex() since nothing comes after these keywords
+            break;
     }
 }
 
@@ -155,10 +240,11 @@ void expr_list() {
     if (nextToken == STRING) {
         // extra call to lex() to look for the comma or carriage return after the string
         lex();
+        printf("%s\t",lexeme);
         // do nothing else for this assignment
         // but in the next assignment you will need to print something!
     } else {
-        expression();
+        printf("%d\t",expression());
         // expression ends with an extra call to lex() so we are already looking for the comma or carriage return by the time we get back here
     }
     while (nextToken == COMMA) {
@@ -167,10 +253,11 @@ void expr_list() {
         if (nextToken == STRING) {
             // extra call to lex() to look for the comma or carriage return after the string
             lex();
+            printf("%s\t",lexeme);
             // do nothing else for this assignment
             // but in the next assignment you will need to print something
         } else {
-            expression();
+            printf("%d\t",expression());
             // no extra call to lex() here because expression() will have already called lex() for us when it was looking for +, -, *, or /
         }
         // there are only two valid tokens AT THIS SPOT
@@ -179,6 +266,7 @@ void expr_list() {
             exit(1);
         }
     }
+    printf("\n");
 }
 
 void var_list() {
@@ -203,45 +291,67 @@ void var_list() {
     }
 }
 
-void expression() {
+int expression() {
     if(nextToken == ADD_OP || nextToken == SUB_OP) {
         lex(); // move past the leading + or - if it was there otherwise, the current nextToken is part of the term so no need to call lex()
     }
-    term();
+    int result = term();
     // no need to call lex() here because term() will have already called lex() for us when it was looking for * or /
     while (nextToken == ADD_OP || nextToken == SUB_OP) {
         lex(); // move past the + or -
-        term();
+        if (nextToken == ADD_OP)
+            result += term();
+        else
+            result -= term();
         // remember, term() will have already called lex() for us when it was looking for * or / so no need to call it again here
     }
     // no need for extra call to lex() here because the while loop will have already called lex() for us when it was looking for + or -
+    return result;
 }
 
-void term() {
+int term() {
     // you gotta do something here ... should be very similar to expression() but looking for * and / instead of + and -
     // note that term() will end up having an extra call to lex() at the end just like expression() does
-    factor();
+    int result = factor();
     lex(); // look for mult op or div op
     while (nextToken == MULT_OP || nextToken == DIV_OP) {
         lex();
-        factor();
+        if (nextToken == MULT_OP)
+            result *= factor();
+        else
+            result /= factor();
         lex();
     }
+    return result;
 }
 
-void factor() {
+int factor() {
     // look back at the grammar for all the possibilities for a factor ... you need if else if to handle identifiers, numbers, and parenthesized expressions
     // you should make very sure NOT to have an extra call to lex() here (finally!) because expression() and term() are the ones that need the extra calls to lex() to look for +, -, *, or /
-    if (nextToken == VAR || nextToken == NUMBER) {
-        // dont do anything for this assignment
+    if (nextToken == VAR) {
+        // look up the value in the symbol table
+        // error if not defined
+        int pos = lexeme[0] - 'A';
+        if (symboldefined[pos]==0) {
+            printf("How? Undefined symbol %c\n", lexeme[0]);
+            exit(1);
+        }
+        return symboltable[pos];
     }
-    else if (nextToken == LEFT_PAREN) {
+    else if (nextToken == NUMBER) {
+        return atoi(lexeme);
+    } else if (nextToken == LEFT_PAREN) {
         lex();
-        expression();
+        int result = expression();
         if(nextToken != RIGHT_PAREN) {
             printf("Found %d but expecting RIGHT PAREN\n", nextToken);
         }
+        return result;
     }
+    // this should NEVER happen
+    printf("What? Syntax error, expecting VAR, NUMBER, or ()\n");
+    exit(1);
+    return -999999;
 }
 
 // this always has an extra call to lex()

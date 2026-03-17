@@ -13,6 +13,8 @@ int lineno = 0;    // if this is equal to 0 then we should execute immediately
 char* lines[1000];   // preallocate enough room for 1000 lines if we have more lines than that, oh well.
 int linenos[1000];   // map the corresponding position in "lines" to the "line #" in this data structure
 int lineindex = 0;   // keeps track of how many lines we have and where the next line should be stored
+int linei = 0;       // keeps track of which line index we are on while running a program
+int reti = 0;        // keeps track of the index we should return to after a gosub is executed
 
 // here's our dirty symbol table
 int symboltable[26];   // position 0 = "A", position 1 = "B", etc...
@@ -72,6 +74,14 @@ int search(int lineno) {
     return -1;
 }
 
+int findLine(int lineno) {
+    int hit = search(lineno);
+    if (hit<0) {
+        printf("Could not find line number target %d\n", lineno);
+        exit(1);
+    }
+    return hit;
+}
 
 /******************************************************/
 /* main driver */
@@ -139,6 +149,7 @@ void line() {
 
 // lex() MUST have already been called before here
 void statement() {
+    int targetlineno; // this is ONLY used for GOTO and GOSUB
     switch(nextToken) {
         case PRINT:
             lex();
@@ -158,12 +169,6 @@ void statement() {
             statement();
             // we never need an extra call to lex() here 
             // because statement() ALWAYS has an extra call to lex()
-            break;
-
-        case GOTO:
-            lex();
-            expression();
-            // no extra call to lex to look for the carriage return
             break;
 
         // keep going with more cases INPUT DOES NOT NEED THE EXTRA CALL TO LEX ... NEITHER DO THE ONES THAT ARE JUST KEYWORDS
@@ -191,9 +196,25 @@ void statement() {
             // no extra call to lex() here because expression() will have already called lex() for us when it was looking for +, -, *, or /
             break;
         
+        case GOTO:
+            lex();
+            targetlineno = expression();
+            // find the linei we are supposed to jump to
+            // remember this is from a recursive call where
+            // we are in the middle of a for loop that will execute
+            // linei++ ... so we need to set it to the target index minus 1
+            linei = findLine(targetlineno)-1;
+            // no extra call to lex to look for the carriage return
+            break;
+
         case GOSUB:
             lex();
-            expression();
+            targetlineno = expression();
+            reti = linei; // save the index of the line we should return to
+            // remember this is from a recursive call where
+            // we are in the middle of a for loop that will execute
+            // linei++ ... so we need to set it to the target index minus 1
+            linei = findLine(targetlineno)-1; 
 
             // NO extra call to lex to look for the carriage return b/c expression() has an extra call to lex()
             break;
@@ -202,6 +223,7 @@ void statement() {
             lineindex = 0;
             lex(); // this IS the extra call to lex() since nothing comes after these keywords
             break;
+
         case LIST:
             sort();
             for (int i=0; i<lineindex; i++) {
@@ -209,13 +231,19 @@ void statement() {
             }
             lex(); // this IS the extra call to lex() since nothing comes after these keywords
             break;
+
         case RETURN:
+            linei = reti;
+            lex();
+            break;
+
         case RUN:
             sort();
             // BIG TO DO HERE: update the lexer to take in a String
             // instead of always reading from a file ... DO THIS BY ADDING
             // a FLAG variable to the lexer to indicate whether it 
             // should be grabbing the next token from a FILE or from a String
+
             // also, add a function that will set a global string to be processed
             // and simultaneously set the flag to start reading from the string
 
@@ -223,12 +251,27 @@ void statement() {
             // setting the read_from_str flag and the current line as the string to be read
             // use one variable both ... a char* to the line to be prcoessed
             // if that line is null, then the lexer should be reading from the file
+            for (linei=0; linei<lineindex; linei++) {
+                // GOTO and GOSUB will ALTER linei
+                in_str = lines[linei];
+                stri = 0;
+                printf("Executing: %d %s\n",linenos[linei],in_str);
+                getChar();
+                lex();
+                line();
+            }
 
             // DON'T FORGET, we need to clear the flag after the program
             // has run and set it to continue reading from the file
             // clearing the flag might necessitate messing with those global
             // variables (nextChar, charClass, etc...)
+            lex();
+            break;
+
         case END:
+            // force the for loop to stop by setting linei = to lineindex
+            linei = lineindex;
+            stri = -1;  // this puts us back into "file reading" mode
             lex(); // this IS the extra call to lex() since nothing comes after these keywords
             break;
     }
@@ -275,8 +318,12 @@ void var_list() {
     }
     else {
         lex();
-        // do nothing else for this assignment
-        // but in the next assignment you will need to print something
+        // we need to use scanf to read from the console
+        // and convert whatever they type in into a number
+        // and then store that number into the symboltable
+        // at the right spot
+        // maybe create a separate function so that you 
+        // can just call it twice
     }
     while (nextToken == COMMA) {
         lex();
@@ -285,8 +332,10 @@ void var_list() {
         }
         else {
             lex();
-            // do nothing else for this assignment
-            // but in the next assignment you will need to print something
+            // we need to use scanf to read from the console
+            // and convert whatever they type in into a number
+            // and then store that number into the symboltable
+            // at the right spot
         }
     }
 }

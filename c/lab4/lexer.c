@@ -149,8 +149,8 @@ void addChar()
 void getChar()
 {
   if (stri>=0 && stri>=strlen(in_str)) {
-    charClass = EOF;
-    nextChar = 0;
+    charClass = CR;
+    nextChar = '\n';
     return;
   }
   int c = stri<0 ? getc(in_fp) : in_str[stri++];

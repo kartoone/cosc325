@@ -27,7 +27,15 @@ void var_list();
 int expression();
 int term();
 int factor();
-void relop();
+int relop();
+
+void killIf() {
+    // force the lexer to read to the end of the line
+    // this is when an if statement is false so that it finishes parsing any way without executing
+    while (nextToken != CR && nextToken != EOF) {
+        lex();
+    }
+}
 
 // hard coded swap of the positions applied to two different data structures
 void swap(int j, int k) {
@@ -150,6 +158,9 @@ void line() {
 // lex() MUST have already been called before here
 void statement() {
     int targetlineno; // this is ONLY used for GOTO and GOSUB
+    int if_a;
+    int if_b;
+    int op;
     switch(nextToken) {
         case PRINT:
             lex();
@@ -159,14 +170,60 @@ void statement() {
 
         case IF:
             lex();
-            expression(); // all expressions have an extra call to lex() because of term()
-            relop(); // this always ends with an extra call to lex()
-            expression();
+            if_a = expression(); // all expressions have an extra call to lex() because of term()
+            op = relop(); // this always ends with an extra call to lex()
+            if_b = expression();
             if (nextToken != THEN) {
                 printf("error! expecting then found something else");
             }
             lex();
-            statement();
+            switch (op) {
+                case 0:
+                    if (if_a < if_b) {
+                        statement();
+                    } else {
+                        killIf();
+                    }
+                    break;
+                case 1:
+                    if (if_a > if_b) {
+                        statement();
+                    } else {
+                        killIf();
+                    }
+
+                    break;
+                 case 2:
+                    if (if_a == if_b) {
+                        statement();
+                    } else {
+                        killIf();
+                    }
+
+                    break;
+                 case 3:
+                    if (if_a <= if_b) {
+                        statement();
+                    } else {
+                        killIf();
+                    }
+
+                    break;
+                 case 4:
+                    if (if_a >= if_b) {
+                        statement();
+                    } else {
+                        killIf();
+                    }
+                    break;
+                 case 5:
+                    if (if_a != if_b) {
+                        statement();
+                    } else {
+                        killIf();
+                    }
+                    break;
+             }
             // we never need an extra call to lex() here 
             // because statement() ALWAYS has an extra call to lex()
             break;
@@ -313,10 +370,15 @@ void expr_list() {
 }
 
 void var_list() {
+    int varpos[26];
+    int varcnt = 0;
     if (nextToken != VAR) {
         printf("Expecting VAR but found: %d\n", nextToken);
     }
     else {
+        // before we call lex() again we need to grab position
+        varpos[varcnt++] = lexeme[0] - 'A';        
+
         lex();
         // we need to use scanf to read from the console
         // and convert whatever they type in into a number
@@ -331,12 +393,18 @@ void var_list() {
             printf("Expecting VAR but found: %d\n", nextToken);
         }
         else {
+            varpos[varcnt++] = lexeme[0] - 'A';        
             lex();
-            // we need to use scanf to read from the console
-            // and convert whatever they type in into a number
-            // and then store that number into the symboltable
-            // at the right spot
         }
+    }
+
+    // now we need to use scanf to read from the console
+    // and convert whatever they type in into a number
+    // and then store that number into the symboltable
+    // varpos[] we found during parsing
+    for (int i=0; i<varcnt; i++) {
+        scanf("%d",&symboltable[varpos[i]]);
+        symboldefined[varpos[i]] = 1;
     }
 }
 
@@ -364,11 +432,13 @@ int term() {
     int result = factor();
     lex(); // look for mult op or div op
     while (nextToken == MULT_OP || nextToken == DIV_OP) {
-        lex();
-        if (nextToken == MULT_OP)
+        if (nextToken == MULT_OP) {
+            lex();
             result *= factor();
-        else
+        } else {
+            lex();
             result /= factor();
+        }
         lex();
     }
     return result;
@@ -404,24 +474,45 @@ int factor() {
 }
 
 // this always has an extra call to lex()
-void relop() {
+// 0: <
+// 1: >
+// 2: ==
+// 3: <=
+// 4: >=
+// 5: <> or ><
+int relop() {
     if (nextToken == LT_OP) {
         lex();
         if (nextToken == RT_OP || nextToken == EQUALS_OP) {
             lex();
+            if (nextToken == RT_OP) {
+                return 5;
+            } else {
+                return 3;
+            }
+        } else {
+            return 0;
         }
     }
     else if (nextToken == RT_OP) {
         lex();
         if (nextToken == LT_OP || nextToken == EQUALS_OP) {
             lex();
+            if (nextToken == LT_OP)
+                return 5;
+            else
+                return 4;
+        } else {
+            return 1;
         }
     }
     else if (nextToken == EQUALS_OP) {
         lex();
+        return 2;
     }
     else {
         printf("Expecting some valid REL_OP but found: %d\n", nextToken);
         exit(1);
     }
+    return -1; // there should be NO PATH that ever hits here
 }

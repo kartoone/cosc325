@@ -35,6 +35,7 @@ int lex();
 #define NUMBER 10
 #define IDENT 11
 #define VAR 12
+#define REM 13
 #define LT_OP 18
 #define RT_OP 19
 #define EQUALS_OP 20
@@ -186,6 +187,8 @@ void getNonBlank()
 int keywordLookup() {
   if (strcmp(lexeme,"PRINT")==0 || strcmp(lexeme,"PR")==0)
     return PRINT;
+  else if (strcmp(lexeme,"REM")==0)
+    return REM;
   else if (strcmp(lexeme,"INPUT")==0)
     return INPUT;
   else if (strcmp(lexeme,"GOSUB")==0)

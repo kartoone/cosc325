@@ -32,9 +32,10 @@ int relop();
 void killIf() {
     // force the lexer to read to the end of the line
     // this is when an if statement is false so that it finishes parsing any way without executing
-    while (nextToken != CR && nextToken != EOF) {
-        lex();
+    while (nextChar != '\n' && nextChar != 0) {
+        getChar();
     }
+    nextToken = CR;
 }
 
 // hard coded swap of the positions applied to two different data structures
@@ -162,6 +163,10 @@ void statement() {
     int if_b;
     int op;
     switch(nextToken) {
+        case REM:
+            killIf();
+            break;
+
         case PRINT:
             lex();
             expr_list();

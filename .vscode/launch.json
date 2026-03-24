@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Examples",
+            "request": "launch",
+            "mainClass": "Examples",
+            "projectName": "cosc325_bb215847"
+        },
+        {
+            "type": "java",
             "name": "Scope",
             "request": "launch",
             "mainClass": "Scope",

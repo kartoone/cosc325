@@ -3,6 +3,16 @@
 (define pi_p1 (+ pi 1))
 (define test_data '(1 2 3 4 5 6 7 8 9 10))
 
+(foldl + 0 test_data)
+; total = 0
+; for num in test_data:
+;   total += num
+
+(foldl * 1 test_data)
+; product = 1
+; for num in test_data:
+;    product *= num
+
 ; thresh is essentially a local constant
 ; this function only calculates correct value for small numbers
 ; otherwise it returns 0
@@ -22,5 +32,5 @@
 
 (map factorial '(5 9 12))
 
-(require net/http-easy)
-(define apiUrl "https://api.open-meteo.com/v1/forecast?latitude=33.5&longitude=-86.8&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto")
+;(require net/http-easy)
+;(define apiUrl "https://api.open-meteo.com/v1/forecast?latitude=33.5&longitude=-86.8&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto")

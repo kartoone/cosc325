@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "FunctionalProgramming",
+            "request": "launch",
+            "mainClass": "chapter19.FunctionalProgramming",
+            "projectName": "cosc325_bb215847"
+        },
+        {
+            "type": "java",
             "name": "Examples",
             "request": "launch",
             "mainClass": "Examples",

@@ -141,9 +141,3 @@
 
 
 (sortL '(5 4 3 2 1))
-
-
-(define (countAll lis)
-  (map (lambda (a) (countElement lis a))) lis)
-  
-
